@@ -72,23 +72,24 @@ source ~/.bashrc
 ### Step 3: Set Up Micro XRCE-DDS
 Install the Micro XRCE-DDS Agent to bridge PX4 and ROS2.
 
-#### 1. Clone and Build the Agent:
+#### 1. Clone and Build the Agent: (OPTION 1)
 ```bash
 git clone -b v2.4.2 https://github.com/eProsima/Micro-XRCE-DDS-Agent.git
 cd Micro-XRCE-DDS-Agent
 mkdir build
 cd build
-```
-```bash
 cmake ..
-```
-```bash
 make
-```
-```bash
 sudo make install
 sudo ldconfig /usr/local/lib/
 ```
+### NOTE: If error in installing the above use Option 2
+#### 2. Install from Snap Package: (OPTION 2)
+Try to install the agent using a Snap package:
+```bash
+sudo snap install micro-xrce-dds-agent --edge
+```
+Note: Requires snapd installed (sudo apt install snapd if missing). The --edge flag installs the latest development version.
 
 ### Step 4: Set Up px4_ros_com for ROS2 Integration
 Integrate PX4 with ROS2 using the px4_ros_com package.
@@ -121,7 +122,7 @@ Launch a simulated drone with PX4 SITL and Gazebo.
 #### 1. Run the Simulation:
 ```bash
 cd ~/PX4-Autopilot
-make px4_sitl gazebo
+make px4_sitl gz_x500
 ```
 - You should see Gazebo open with a drone model.
 
@@ -129,9 +130,15 @@ make px4_sitl gazebo
 Connect PX4 to ROS2 with the DDS agent.
 
 #### 1. Run the Agent (in a new terminal):
+- If built from source:
 ```bash
 MicroXRCEAgent udp4 -p 8888
 ```
+- If installed via Snap:
+```bash
+micro-xrce-dds-agent udp4 -p 8888
+```
+
 
 ### Step 7: Verify Communication Between PX4 and ROS2
 Check if PX4 is talking to ROS2.
@@ -156,3 +163,75 @@ chmod +x QGroundControl.AppImage
 ```
 - Look for topics like /fmu/out/vehicle_odometry. If you see them, the connection works!
 
+#### 3. Connect to the Drone: (Generally get connected automatically)
+
+- Go to Application Settings > Comm Links.
+- Add a new link:
+  - Type: UDP
+  - Port: 14550
+- Connect to this link to view the drone’s status.
+
+#### 4. Click on Take OFF and you should see your drone taking off
+![video](https://github.com/user-attachments/assets/48936c56-b588-43d1-b15c-f109df7de422)
+
+---
+## Troubleshooting
+### General Troubleshooting
+- **Simulation won’t start?**
+  - Ensure Gazebo is installed (sudo apt install gazebo if missing).
+- **No ROS2 topics?**
+  - Verify the Micro XRCE-DDS Agent is running and the simulation is active.
+- **QGroundControl not connecting?**
+  - Double-check the UDP port (14550) and ensure the simulation is running.
+ 
+### Troubleshooting Graphics Issues in Virtual Machines
+- If you're running Ubuntu in a virtual machine (e.g., VirtualBox, VMware) and encounter errors like:
+```bash
+[GUI] [Err] [Ogre2RenderEngine.cc:1304]  Unable to create the rendering window: OGRE EXCEPTION(3:RenderingAPIException): OpenGL 3.3 is not supported. Please update your graphics card drivers. in GL3PlusRenderSystem::initialiseContext at ./RenderSystems/GL3Plus/src/OgreGL3PlusRenderSystem.cpp (line 3434)
+```
+This error means your VM lacks the necessary graphics support for OpenGL 3.3, which Gazebo's rendering engine requires. Below are two solutions to resolve this issue:
+
+#### Solution: Enable 3D Acceleration in Your VM
+To use the GUI, you’ll need to enable 3D acceleration and ensure your VM has adequate resources. Follow these steps:
+
+1. Check VM Settings:
+- VirtualBox: Open Settings > Display > Screen, check "Enable 3D Acceleration", and set video - memory to at least 128MB.
+- VMware: Go to VM > Settings > Hardware > Display, enable "Accelerate 3D graphics", and allocate at least 128MB of video memory.
+
+2. Install Guest Additions/Tools:
+- VirtualBox: From the menu, select Devices > Insert Guest Additions CD Image, then run:
+```bash
+sudo apt install build-essential dkms
+sudo /media/$USER/VBox_GAs_*/VBoxLinuxAdditions.run
+```
+- VMware: Select VM > Install VMware Tools, extract the downloaded file, and run:
+```bash
+sudo ./vmware-install.pl
+```
+
+3.** Verify OpenGL Version:** After rebooting your VM, check the OpenGL version to ensure it meets the requirement:
+```bash
+glxinfo | grep "OpenGL version"
+```
+- You should see something like: "OpenGL version string: 3.3 (Compatibility Profile) Mesa 21.2.6". It must be 3.3 or higher.
+
+4. **Update Graphics Drivers:** If the OpenGL version is still below 3.3, update your Mesa drivers:
+```bash
+sudo add-apt-repository ppa:kisak/kisak-mesa
+sudo apt update
+sudo apt upgrade
+```
+Reboot the VM and recheck the OpenGL version with the glxinfo command.
+
+5. **Run the Simulation:** Launch the simulation again:
+```bash
+cd PX4-Autopilot/
+LIBGL_ALWAYS_SOFTWARE=1 make px4_sitl gz_x500
+```
+- The Gazebo GUI with drone should now start without errors.
+---
+## Summary
+Congratulations! You’ve set up a fully functional simulation environment with PX4, ROS2, and QGroundControl. This setup is a great starting point for developing and testing drone applications. When you’re ready to move to real hardware, you’ll need to flash PX4 firmware to a flight controller and configure a companion computer—but for now, enjoy experimenting in simulation!
+
+Happy flying!
+---
