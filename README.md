@@ -231,7 +231,6 @@ LIBGL_ALWAYS_SOFTWARE=1 make px4_sitl gz_x500
 - The Gazebo GUI with drone should now start without errors.
 ---
 ## Summary
-Congratulations! You’ve set up a fully functional simulation environment with PX4, ROS2, and QGroundControl. This setup is a great starting point for developing and testing drone applications. When you’re ready to move to real hardware, you’ll need to flash PX4 firmware to a flight controller and configure a companion computer—but for now, enjoy experimenting in simulation!
-
+Congratulations! You’ve set up a fully functional simulation environment with PX4, ROS2, and QGroundControl. This setup is a great starting point for developing and testing drone applications. When you’re ready to move to real hardware, you’ll need to flash PX4 firmware to a flight controller and configure a companion computer—but for now, enjoy experimenting in simulation! <br>
 Happy flying!
----
+
